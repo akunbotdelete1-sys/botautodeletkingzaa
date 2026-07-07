@@ -188,9 +188,8 @@ async def auto_delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ):
             await msg.delete()
 
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
+    except:
+        pass
 
 #================= WRAPPER =================
 
@@ -822,7 +821,7 @@ app.add_handler(CommandHandler("kurangmasaaktif", kurangmasaaktif))
 app.add_handler(CommandHandler("delselamanya", delselamanya))
 
 # 🔥 AUTO DELETE PALING BAWAH
-app.add_handler(MessageHandler(~filters.ALL, auto_delete), group=100)
+app.add_handler(MessageHandler(~filters.COMMAND, auto_delete), group=1)
 
 print("BOT RUNNING...")
 
