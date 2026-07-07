@@ -821,7 +821,7 @@ app.add_handler(CommandHandler("kurangmasaaktif", kurangmasaaktif))
 app.add_handler(CommandHandler("delselamanya", delselamanya))
 
 # 🔥 AUTO DELETE PALING BAWAH
-app.add_handler(MessageHandler(filters.ALL, auto_delete), group=100)
+app.add_handler(MessageHandler(filters.ALL, auto_delete), group=1)
 
 print("BOT RUNNING...")
 
