@@ -31,7 +31,6 @@ OWNER_USERNAME = "@KINGZAAASLI"
 client = MongoClient(MONGO_URI)
 db = client["telegram_bot"]
 groups_col = db["groups"]
-chat_logs = db["chat_logs"]
 #================= RESPONSE =================
 
 RESP = {
@@ -93,9 +92,9 @@ def save_group(g):
     )
 
 #================= PREMIUM =================
-
 def clean_expired(g):
     now = time.time()
+    changed = False
 
     if "premium_users" not in g:
         g["premium_users"] = {}
@@ -107,8 +106,11 @@ def clean_expired(g):
         if exp != -1 and exp <= now:
             del g["premium_users"][uid]
             g.get("allowed_users", {}).pop(uid, None)
+            changed = True
 
-    save_group(g)
+    if changed:
+        save_group(g)
+
 
 
 def shutdown(g, user_id=None):
@@ -152,45 +154,29 @@ async def auto_delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
         g = get_group(msg.chat.id)
         clean_expired(g)
 
-        # SIMPAN CHAT
-        text_msg = msg.text or msg.caption or ""
-
-        chat_logs.insert_one({
-            "chat_id": str(msg.chat.id),
-            "user_id": str(msg.from_user.id),
-            "name": msg.from_user.first_name,
-            "username": msg.from_user.username or "",
-            "text": text_msg.lower(),
-            "time": time.time()
-        })
-
         premium_off = shutdown(g)
 
         if premium_off and not g.get("owner_mode", False):
             return
 
-        if (
-            g.get("delete_on")
-            and str(msg.from_user.id) in g["targets"]
-        ):
-                await msg.delete()
+        # TARGET
+        if g.get("delete_on") and str(msg.from_user.id) in g["targets"]:
+            await msg.delete()
+            return
 
-        if (
-            g.get("filter_text")
-            and msg.text
-        ):
+        # FILTER TEXT
+        if g.get("filter_text") and msg.text:
             if msg.text.lower() in g["texts"]:
                 await msg.delete()
-            
-        if (
-            g.get("filter_foto")
-            and msg.photo
-        ):
+                return
+
+        # FILTER FOTO
+        if g.get("filter_foto") and msg.photo:
             await msg.delete()
+            return
 
     except:
         pass
-
 #================= WRAPPER =================
 
 async def success(msg, text):
